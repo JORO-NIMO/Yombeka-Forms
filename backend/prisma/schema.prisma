@@ -1,0 +1,61 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  forms     Form[]
+}
+
+model Form {
+  id          String      @id @default(cuid())
+  ownerId     String
+  owner       User        @relation(fields: [ownerId], references: [id])
+  title       String
+  slug        String?     @unique
+  isPaused    Boolean     @default(false)
+  deadline    DateTime?
+  closedMessage String?
+  createdAt   DateTime    @default(now())
+  fields      Field[]
+  submissions Submission[]
+}
+
+model Field {
+  id       String @id @default(cuid())
+  formId   String
+  form     Form   @relation(fields: [formId], references: [id])
+  key      String
+  label    String
+  type     String
+  required Boolean @default(false)
+  options  String? // JSON string for options
+  order    Int    @default(0)
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id])
+  data      String   // JSON string
+  createdAt DateTime @default(now())
+}
+
+model ExportJob {
+  id         String   @id @default(cuid())
+  formId     String
+  type       String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  finishedAt DateTime?
+}
